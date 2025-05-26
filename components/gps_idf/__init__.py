@@ -84,6 +84,7 @@ CONFIG_SCHEMA = cv.All(
     )
     .extend(cv.polling_component_schema("20s"))
     .extend(uart.UART_DEVICE_SCHEMA),
+    cv.only_with_esp_idf,
 )
 FINAL_VALIDATE_SCHEMA = uart.final_validate_device_schema("gps_idf", require_rx=True)
 

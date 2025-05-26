@@ -1,6 +1,5 @@
 #pragma once
 
-#define USE_ESP32
 #ifdef USE_ESP32
 
 #include <inttypes.h>
