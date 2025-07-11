@@ -10,60 +10,60 @@ namespace mpu9255 {
 constexpr uint8_t MPU9255_REGISTER_MAG_address       = 0x0C; //magnetometer
 constexpr uint8_t MPU9255_REGISTER_MPU_address       = 0x68; //main chip
 
-enum MPU9255Modules
+enum Modules
 {
-  MPU9255Modules_Acc_X,//accelerometer X axis
-  MPU9255Modules_Acc_Y,//accelerometer Y axis
-  MPU9255Modules_Acc_Z,//accelerometer Z axis
-  MPU9255Modules_Gyro_X,//gyroscope X axis
-  MPU9255Modules_Gyro_Y,//gyroscope Y axis
-  MPU9255Modules_Gyro_Z,//gyroscope Z axis
-  MPU9255Modules_Magnetometer,//magnetometer
-  MPU9255Modules_Accelerometer,//accelerometer
-  MPU9255Modules_Gyroscope,//gyroscope
-  MPU9255Modules_Thermometer,//thermometer
-  MPU9255Modules_SignalPaths,//all signal paths
+  MM_ACC_X,//accelerometer X axis
+  MM_ACC_Y,//accelerometer Y axis
+  MM_ACC_Z,//accelerometer Z axis
+  MM_GYRO_X,//gyroscope X axis
+  MM_GYRO_Y,//gyroscope Y axis
+  MM_GYRO_Z,//gyroscope Z axis
+  MM_MAG,//magnetometer
+  MM_ACC,//accelerometer
+  MM_GYRO,//gyroscope
+  MM_THERMO,//thermometer
+  MM_SIGNAL_PATHS,//all signal paths
 };
 
-enum MPU9255AccelerometerScales
+enum MS_ACC
 {
-  MPU9255AccelerometerScales_2g,//+-2g
-  MPU9255AccelerometerScales_4g,//+-4g
-  MPU9255AccelerometerScales_8g,//+-8g
-  MPU9255AccelerometerScales_16g,//+-16g
+  MS_ACC_2G,//+-2g
+  MS_ACC_4G,//+-4g
+  MS_ACC_8G,//+-8g
+  MS_ACC_16G,//+-16g
 };
 
-enum MPU9255GyroscopeScales
+enum MS_GYRO
 {
-  MPU9255GyroscopeScales_250dps,//+-250 degrees per second
-  MPU9255GyroscopeScales_500dps,//+- 500 degrees per second
-  MPU9255GyroscopeScales_1000dps,//+- 1000 degrees per second
-  MPU9255GyroscopeScales_2000dps,//+- 2000 degrees per second
+  MS_GYRO_250DPS,//+-250 degrees per second
+  MS_GYRO_500DPS,//+- 500 degrees per second
+  MS_GYRO_1000DPS,//+- 1000 degrees per second
+  MS_GYRO_2000DPS,//+- 2000 degrees per second
 };
 
-enum MPU9255AccelerometerBandwidth
+enum MB_ACC
 {
-  MPU9255AccelerometerBandwidth_1113Hz,
-  MPU9255AccelerometerBandwidth_460Hz,
-  MPU9255AccelerometerBandwidth_184Hz,
-  MPU9255AccelerometerBandwidth_92Hz,
-  MPU9255AccelerometerBandwidth_41Hz,
-  MPU9255AccelerometerBandwidth_20Hz,
-  MPU9255AccelerometerBandwidth_10Hz,
-  MPU9255AccelerometerBandwidth_5Hz,
+  MB_ACC_1KHZ,
+  MB_ACC_460HZ,
+  MB_ACC_184HZ,
+  MB_ACC_92HZ,
+  MB_ACC_41HZ,
+  MB_ACC_20HZ,
+  MB_ACC_10HZ,
+  MB_ACC_5HZ,
 };
 
-enum MPU9255GyroscopeBandwidth
+enum MB_GYRO
 {
-  MPU9255GyroscopeBandwidth_8800Hz,
-  MPU9255GyroscopeBandwidth_3600Hz,
-  MPU9255GyroscopeBandwidth_250Hz,
-  MPU9255GyroscopeBandwidth_184Hz,
-  MPU9255GyroscopeBandwidth_92Hz,
-  MPU9255GyroscopeBandwidth_41Hz,
-  MPU9255GyroscopeBandwidth_20Hz,
-  MPU9255GyroscopeBandwidth_10Hz,
-  MPU9255GyroscopeBandwidth_5Hz,
+  MB_GYRO_8KHZ,
+  MB_GYRO_3KHZ,
+  MB_GYRO_250HZ,
+  MB_GYRO_184HZ,
+  MB_GYRO_92HZ,
+  MB_GYRO_41HZ,
+  MB_GYRO_20HZ,
+  MB_GYRO_10HZ,
+  MB_GYRO_5HZ,
 };
 
 enum MPU9255InterruptSignalMode {
@@ -98,10 +98,10 @@ class MPU9255Component : public PollingComponent, public i2c::I2CDevice {
   float get_setup_priority() const override;
 
   // parameter setters
-  void set_accel_scale(MPU9255AccelerometerScales scale) { accel_scale_ = scale; }
-  void set_gyro_scale(MPU9255GyroscopeScales scale) { gyro_scale_ = scale; }
-  void set_accel_bandwidth(MPU9255AccelerometerBandwidth bandwidth) { accel_bandwidth_ = bandwidth; }
-  void set_gyro_bandwidth(MPU9255GyroscopeBandwidth bandwidth) { gyro_bandwidth_ = bandwidth; }
+  void set_accel_scale(MS_ACC scale) { accel_scale_ = scale; }
+  void set_gyro_scale(MS_GYRO scale) { gyro_scale_ = scale; }
+  void set_accel_bandwidth(MB_ACC bandwidth) { accel_bandwidth_ = bandwidth; }
+  void set_gyro_bandwidth(MB_GYRO bandwidth) { gyro_bandwidth_ = bandwidth; }
 
   void set_accel_offset_x(float offset) { accel_offset_x_ = offset; }
   void set_accel_offset_y(float offset) { accel_offset_y_ = offset; } 
@@ -163,10 +163,10 @@ protected:
   sensor::Sensor *temperature_sensor_{nullptr};
 
   // scale and bandwidth settings
-  MPU9255AccelerometerScales accel_scale_{MPU9255AccelerometerScales_4g};
-  MPU9255GyroscopeScales gyro_scale_{MPU9255GyroscopeScales_250dps};
-  MPU9255AccelerometerBandwidth accel_bandwidth_{MPU9255AccelerometerBandwidth_41Hz};
-  MPU9255GyroscopeBandwidth gyro_bandwidth_{MPU9255GyroscopeBandwidth_41Hz};
+  MS_ACC accel_scale_{MS_ACC_4G};
+  MS_GYRO gyro_scale_{MS_GYRO_250DPS};
+  MB_ACC accel_bandwidth_{MB_ACC_41HZ};
+  MB_GYRO gyro_bandwidth_{MB_GYRO_41HZ};
 
   // offsets for accelerometer
   float accel_offset_x_{0.0f};
@@ -238,8 +238,8 @@ protected:
   // power management functions
   bool hardware_reset_();
   bool sleep_enable_(bool enable);
-  bool reset_module_(MPU9255Modules module);
-  bool enable_module_(MPU9255Modules module, bool enable);
+  bool reset_module_(Modules module);
+  bool enable_module_(Modules module, bool enable);
 
   // interrupt functions
   bool set_interupt_signal_mode_(MPU9255InterruptSignalMode mode);
@@ -262,12 +262,12 @@ protected:
   bool testMag_();
 
   // scale and bandwidth setter functions
-  uint8_t convert_accel_scale_to_register_(uint8_t current_state, MPU9255AccelerometerScales scale);
-  uint8_t convert_gyro_scale_to_register_(uint8_t current_state, MPU9255GyroscopeScales scale);
-  bool set_accel_scale_(MPU9255AccelerometerScales scale);
-  bool set_gyro_scale_(MPU9255GyroscopeScales scale);
-  void set_accel_bandwidth_(MPU9255AccelerometerBandwidth bandwidth);
-  void set_gyro_bandwidth_(MPU9255GyroscopeBandwidth bandwidth);
+  uint8_t convert_accel_scale_to_register_(uint8_t current_state, MS_ACC scale);
+  uint8_t convert_gyro_scale_to_register_(uint8_t current_state, MS_GYRO scale);
+  bool set_accel_scale_(MS_ACC scale);
+  bool set_gyro_scale_(MS_GYRO scale);
+  void set_accel_bandwidth_(MB_ACC bandwidth);
+  void set_gyro_bandwidth_(MB_GYRO bandwidth);
 };
 
 }  // namespace mpu9255

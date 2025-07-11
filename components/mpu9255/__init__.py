@@ -18,6 +18,7 @@ from esphome.const import (
 
 CODEOWNERS = ["@adlerrobert"]
 DEPENDENCIES = ["i2c"]
+AUTO_LOAD = ["sensor"]
 
 CONF_ACCEL_X = "accel_x"
 CONF_ACCEL_Y = "accel_y"
@@ -30,49 +31,52 @@ CONF_MAG_Y = "mag_y"
 CONF_MAG_Z = "mag_z"
 CONF_TEMP = "temp"
 CONF_MAPPING_VECTOR = "mapping_vector"
-
+CONF_ACCEL_SCALE = "accel_scale"
+CONF_GYRO_SCALE = "gyro_scale"
+CONF_ACCEL_BANDWIDTH = "accel_bandwidth"
+CONF_GYRO_BANDWIDTH = "gyro_bandwidth"
 
 mpu9255_ns = cg.esphome_ns.namespace("mpu9255")
 
-MPU9255AccelerometerScales = mpu9255_ns.enum("MPU9255AccelerometerScales")
+MS_ACC = mpu9255_ns.enum("MS_ACC")
 SCALE_ACC_OPTIONS = {
-    "2g": MPU9255AccelerometerScales.MPU9255AccelerometerScales_2G,
-    "4g": MPU9255AccelerometerScales.MPU9255AccelerometerScales_4G,
-    "8g": MPU9255AccelerometerScales.MPU9255AccelerometerScales_8G,
-    "16g": MPU9255AccelerometerScales.MPU9255AccelerometerScales_16G,
+    "2G": MS_ACC.MS_ACC_2G,
+    "4G": MS_ACC.MS_ACC_4G,
+    "8G": MS_ACC.MS_ACC_8G,
+    "16G": MS_ACC.MS_ACC_16G,
 }
 
-MPU9255GyroscopeScales = mpu9255_ns.enum("MPU9255GyroscopeScales")
+MS_GYRO = mpu9255_ns.enum("MS_GYRO")
 SCALE_GYR_OPTIONS = {
-    "250dps": MPU9255GyroscopeScales.MPU9255GyroscopeScales_250DPS,
-    "500dps": MPU9255GyroscopeScales.MPU9255GyroscopeScales_500DPS,
-    "1000dps": MPU9255GyroscopeScales.MPU9255GyroscopeScales_1000DPS,
-    "2000dps": MPU9255GyroscopeScales.MPU9255GyroscopeScales_2000DPS,
+    "250DPS": MS_GYRO.MS_GYRO_250DPS,
+    "500DPS": MS_GYRO.MS_GYRO_500DPS,
+    "1000DPS": MS_GYRO.MS_GYRO_1000DPS,
+    "2000DPS": MS_GYRO.MS_GYRO_2000DPS,
 }
 
-MPU9255AccelerometerBandwidths = mpu9255_ns.enum("MPU9255AccelerometerBandwidths")
+MB_ACC = mpu9255_ns.enum("MB_ACC")
 BANDWIDTH_ACC_OPTIONS = {
-    "5Hz": MPU9255AccelerometerBandwidths.MPU9255AccelerometerBandwidths_5Hz,
-    "10Hz": MPU9255AccelerometerBandwidths.MPU9255AccelerometerBandwidths_10Hz,
-    "20Hz": MPU9255AccelerometerBandwidths.MPU9255AccelerometerBandwidths_20Hz,
-    "41Hz": MPU9255AccelerometerBandwidths.MPU9255AccelerometerBandwidths_41Hz,
-    "92Hz": MPU9255AccelerometerBandwidths.MPU9255AccelerometerBandwidths_92Hz,
-    "184Hz": MPU9255AccelerometerBandwidths.MPU9255AccelerometerBandwidths_184Hz,
-    "460Hz": MPU9255AccelerometerBandwidths.MPU9255AccelerometerBandwidths_460Hz,
-    "1113Hz": MPU9255AccelerometerBandwidths.MPU9255AccelerometerBandwidths_1113Hz,
+    "5HZ": MB_ACC.MB_ACCS_5HZ,
+    "10HZ": MB_ACC.MB_ACC_10HZ,
+    "20HZ": MB_ACC.MB_ACC_20HZ,
+    "41HZ": MB_ACC.MB_ACC_41HZ,
+    "92HZ": MB_ACC.MB_ACC_92HZ,
+    "184HZ": MB_ACC.MB_ACC_184HZ,
+    "460HZ": MB_ACC.MB_ACC_460HZ,
+    "1KHZ": MB_ACC.MB_ACC_1KHZ,
 }
 
-MPU9255GyroscopeBandwidths = mpu9255_ns.enum("MPU9255GyroscopeBandwidths")
+MB_GYRO = mpu9255_ns.enum("MB_GYRO")
 BANDWIDTH_GYR_OPTIONS = {
-    "5Hz": MPU9255GyroscopeBandwidths.MPU9255GyroscopeBandwidths_5Hz,
-    "10Hz": MPU9255GyroscopeBandwidths.MPU9255GyroscopeBandwidths_10Hz,
-    "20Hz": MPU9255GyroscopeBandwidths.MPU9255GyroscopeBandwidths_20Hz,
-    "41Hz": MPU9255GyroscopeBandwidths.MPU9255GyroscopeBandwidths_41Hz,
-    "92Hz": MPU9255GyroscopeBandwidths.MPU9255GyroscopeBandwidths_92Hz,
-    "184Hz": MPU9255GyroscopeBandwidths.MPU9255GyroscopeBandwidths_184Hz,
-    "250Hz": MPU9255GyroscopeBandwidths.MPU9255GyroscopeBandwidths_250Hz,
-    "3600Hz": MPU9255GyroscopeBandwidths.MPU9255GyroscopeBandwidths_3600Hz,
-    "8800Hz": MPU9255GyroscopeBandwidths.MPU9255GyroscopeBandwidths_8800Hz,
+    "5HZ": MB_GYRO.MB_GYRO_5HZ,
+    "10HZ": MB_GYRO.MB_GYRO_10HZ,
+    "20HZ": MB_GYRO.MB_GYRO_20HZ,
+    "41HZ": MB_GYRO.MB_GYRO_41HZ,
+    "92HZ": MB_GYRO.MB_GYRO_92HZ,
+    "184HZ": MB_GYRO.MB_GYRO_184HZ,
+    "250HZ": MB_GYRO.MB_GYRO_250HZ,
+    "3KHZ": MB_GYRO.MB_GYRO_3KHZ,
+    "8KHZ": MB_GYRO.MB_GYRO_8KHZ,
 }
 
 MPU9255Component = mpu9255_ns.class_(
@@ -131,17 +135,18 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_MAG_Y): gyro_schema,
             cv.Optional(CONF_MAG_Z): gyro_schema,
             cv.Optional(CONF_TEMP): temperature_schema,
-            cv.Optional(CONF_ACCEL_SCALE): cv.Optional("Scale", default="2g"): cv.enum(
+            cv.Optional(CONF_ACCEL_SCALE, default="2G"): cv.enum(
                 SCALE_ACC_OPTIONS, upper=True
             ),
-            cv.Optional(CONF_GYRO_SCALE): cv.Optional("Scale", default="250dps"): cv.enum(
+            cv.Optional(CONF_GYRO_SCALE, default="250DPS"): cv.enum(
                 SCALE_GYR_OPTIONS, upper=True
             ),
-            cv.Optional(CONF_ACCEL_BANDWIDTH): cv.Optional("Bandwidth", default="184Hz"): cv.enum(
+            cv.Optional(CONF_ACCEL_BANDWIDTH, default="41HZ"): cv.enum(
                 BANDWIDTH_ACC_OPTIONS, upper=True
             ),
-            cv.Optional(CONF_GYRO_BANDWIDTH): cv.Optional("Bandwidth", default="184Hz"): cv.enum(
-                BANDWIDTH_GYR_OPTIONS, upper=True),
+            cv.Optional(CONF_GYRO_BANDWIDTH, default="41HZ"): cv.enum(
+                BANDWIDTH_GYR_OPTIONS, upper=True
+            ),
         }
     )
     .extend(cv.polling_component_schema("1s"))
@@ -188,14 +193,11 @@ async def to_code(config):
         cg.add(var.set_temperature_sensor(sens))
 
     if CONF_ACCEL_SCALE in config:
-        scale = config[CONF_ACCEL_SCALE]
-        cg.add(var.set_accel_scale(MPU9255AccelerometerScales[scale.upper()]))
+        cg.add(var.set_accel_scale(config[CONF_ACCEL_SCALE]))
     if CONF_GYRO_SCALE in config:
-        scale = config[CONF_GYRO_SCALE]
-        cg.add(var.set_gyro_scale(MPU9255GyroscopeScales[scale.upper()])) 
+        scale = MS_GYRO[config[CONF_GYRO_SCALE]]
+        cg.add(var.set_gyro_scale(config[CONF_GYRO_SCALE]))
     if CONF_ACCEL_BANDWIDTH in config:
-        bandwidth = config[CONF_ACCEL_BANDWIDTH]
-        cg.add(var.set_accel_bandwidth(MPU9255AccelerometerBandwidths[bandwidth.upper()]))
+        cg.add(var.set_accel_bandwidth(config[CONF_ACCEL_BANDWIDTH]))
     if CONF_GYRO_BANDWIDTH in config:
-        bandwidth = config[CONF_GYRO_BANDWIDTH]
-        cg.add(var.set_gyro_bandwidth(MPU9255GyroscopeBandwidths[bandwidth.upper()]))
+        cg.add(var.set_gyro_bandwidth(config[CONF_GYRO_BANDWIDTH]))

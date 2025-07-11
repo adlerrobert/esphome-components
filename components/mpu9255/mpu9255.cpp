@@ -77,22 +77,22 @@ void MPU9255Component::setup() {
   set_gyro_bandwidth(gyro_bandwidth_);
 
   // configure all sensor objects
-  enable_module_(MPU9255Modules_Acc_X, this->accel_x_sensor_ != nullptr);
-  enable_module_(MPU9255Modules_Acc_Y, this->accel_y_sensor_ != nullptr);
-  enable_module_(MPU9255Modules_Acc_Z, this->accel_z_sensor_ != nullptr);
-  enable_module_(MPU9255Modules_Gyro_X, this->gyro_x_sensor_ != nullptr);
-  enable_module_(MPU9255Modules_Gyro_Y, this->gyro_y_sensor_ != nullptr);
-  enable_module_(MPU9255Modules_Gyro_Z, this->gyro_z_sensor_ != nullptr);
-  enable_module_(MPU9255Modules_Thermometer, this->temperature_sensor_ != nullptr);
-  enable_module_(MPU9255Modules_Magnetometer, this->mag_x_sensor_ != nullptr ||
+  enable_module_(MM_ACC_X, this->accel_x_sensor_ != nullptr);
+  enable_module_(MM_ACC_Y, this->accel_y_sensor_ != nullptr);
+  enable_module_(MM_ACC_Z, this->accel_z_sensor_ != nullptr);
+  enable_module_(MM_GYRO_X, this->gyro_x_sensor_ != nullptr);
+  enable_module_(MM_GYRO_Y, this->gyro_y_sensor_ != nullptr);
+  enable_module_(MM_GYRO_Z, this->gyro_z_sensor_ != nullptr);
+  enable_module_(MM_THERMO, this->temperature_sensor_ != nullptr);
+  enable_module_(MM_MAG, this->mag_x_sensor_ != nullptr ||
                                                 this->mag_y_sensor_ != nullptr ||
                                                 this->mag_z_sensor_ != nullptr);
 }
 
 void MPU9255Component::dump_config() {
   ESP_LOGCONFIG(TAG, "MPU9255:");
-  LOG_I2C_DEVICE(this);
-  LOG_I2C_DEVICE(this->mag_i2c_);
+  ESP_LOGCONFIG(TAG, "  Address MPU: 0x%02X", this->address_);
+  ESP_LOGCONFIG(TAG, "  Address MAG: 0x%02X", this->mag_i2c_.get_i2c_address());
   if (this->is_failed()) {
     ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
   }
@@ -257,54 +257,56 @@ bool MPU9255Component::sleep_enable_(bool enable) {
   }
 }
 
-bool MPU9255Component::reset_module_(MPU9255Modules module) {
+bool MPU9255Component::reset_module_(Modules module) {
   switch (module) {
-    case MPU9255Modules::MPU9255Modules_Accelerometer:
+    case Modules::MM_ACC:
       return write_byte_(I2CSensor_MPU, MPU9255_REGISTER_SIGNAL_PATH_RESET, 1 << 1); // Reset accelerometer
-    case MPU9255Modules::MPU9255Modules_Gyroscope:
+    case Modules::MM_GYRO:
       return write_byte_(I2CSensor_MPU, MPU9255_REGISTER_SIGNAL_PATH_RESET, 1 << 2); // Reset gyroscope
-    case MPU9255Modules::MPU9255Modules_Thermometer:
+    case Modules::MM_THERMO:
       return write_byte_(I2CSensor_MPU, MPU9255_REGISTER_SIGNAL_PATH_RESET, 1 << 0); // Reset thermometer
-    case MPU9255Modules::MPU9255Modules_SignalPaths:
+    case Modules::MM_SIGNAL_PATHS:
       return write_byte_(I2CSensor_MPU, MPU9255_REGISTER_USER_CTRL, 1 << 0); // Reset all signal paths
-    case MPU9255Modules::MPU9255Modules_Magnetometer:
+    case Modules::MM_MAG:
       return write_byte_(I2CSensor_MPU, MPU9255_REGISTER_CNTL2, 1 << 0); // Reset magnetometer
     default:
       return false; // Unsupported module
   }
 }
 
-bool MPU9255Component::enable_module_(MPU9255Modules module, bool enable) {
+bool MPU9255Component::enable_module_(Modules module, bool enable) {
   switch (module)
   {
-    case MPU9255Modules_Acc_X:
+    case MM_ACC_X:
       return enable ? write_byte_AND_(I2CSensor_MPU, MPU9255_REGISTER_PWR_MGMT_2, ~(1<<5)) : write_byte_OR_(I2CSensor_MPU, MPU9255_REGISTER_PWR_MGMT_2, 1<<5);
       break;
 
-    case MPU9255Modules_Acc_Y:
+    case MM_ACC_Y:
       return enable ? write_byte_AND_(I2CSensor_MPU, MPU9255_REGISTER_PWR_MGMT_2, ~(1<<4)) : write_byte_OR_(I2CSensor_MPU, MPU9255_REGISTER_PWR_MGMT_2, 1<<4);
       break;
 
-    case MPU9255Modules_Acc_Z:
+    case MM_ACC_Z:
       return enable ? write_byte_AND_(I2CSensor_MPU, MPU9255_REGISTER_PWR_MGMT_2, ~(1<<3)) : write_byte_OR_(I2CSensor_MPU, MPU9255_REGISTER_PWR_MGMT_2, 1<<3);
       break;
 
-    case MPU9255Modules_Gyro_X:
+    case MM_GYRO_X:
       return enable ? write_byte_AND_(I2CSensor_MPU, MPU9255_REGISTER_PWR_MGMT_2, ~(1<<2)) : write_byte_OR_(I2CSensor_MPU, MPU9255_REGISTER_PWR_MGMT_2, 1<<2);
       break;
 
-    case MPU9255Modules_Gyro_Y:
+    case MM_GYRO_Y:
       return enable ? write_byte_AND_(I2CSensor_MPU, MPU9255_REGISTER_PWR_MGMT_2, ~(1<<1)) : write_byte_OR_(I2CSensor_MPU, MPU9255_REGISTER_PWR_MGMT_2, 1<<1);
       break;
 
-    case MPU9255Modules_Gyro_Z:
+    case MM_GYRO_Z:
       return enable ? write_byte_AND_(I2CSensor_MPU, MPU9255_REGISTER_PWR_MGMT_2, ~(1<<0)) : write_byte_OR_(I2CSensor_MPU, MPU9255_REGISTER_PWR_MGMT_2, 1<<0);
       break;
 
-    case MPU9255Modules_Magnetometer:
+    case MM_MAG:
       return enable ? write_byte_(I2CSensor_MPU, MPU9255_REGISTER_CNTL2, 0x16) : write_byte_(I2CSensor_MPU, MPU9255_REGISTER_CNTL2, 0x00);
       break;
   }
+
+  return false; // Unsupported module
 }
 
 // Interrupt functions ////////////////////////////////////////////////////////
@@ -317,7 +319,7 @@ bool MPU9255Component::set_interupt_signal_mode_(MPU9255InterruptSignalMode mode
 bool MPU9255Component::set_interrupt_active_state_(MPU9255InterruptActiveState state) {
   return state == MPU9255InterruptActiveState_ActiveLow ? 
     write_byte_(I2CSensor_MPU, MPU9255_REGISTER_INT_PIN_CFG, 1<<7) : // Active low
-    write_byte_(I2CSensor_MPU, MPU9255_REGISTER_INT_PIN_CFG, ~(1<<7)); // Active high
+    write_byte_(I2CSensor_MPU, MPU9255_REGISTER_INT_PIN_CFG, 0x7F); // Active high ~(1<<7)
 }
 
 bool MPU9255Component::set_interrupt_pin_mode_(MPU9255InterruptPinMode mode) {
@@ -353,7 +355,7 @@ bool MPU9255Component::set_interrupt_motion_detection_threshold_(uint8_t thresho
 }
 
 bool MPU9255Component::enable_interrupt_motion_detection_(bool enable) {
-  return write_byte_(I2CSensor_MPU, MPU9255_REGISTER_MOT_DETECT_CTRL, enable ? (1<<7) : ~((1<<7)));
+  return write_byte_(I2CSensor_MPU, MPU9255_REGISTER_MOT_DETECT_CTRL, enable ? (1<<7) : ~(1<<7));
 }
 
 bool MPU9255Component::clear_interrupts_() {
@@ -384,16 +386,16 @@ bool MPU9255Component::update_accel_data_() {
   // Select scale factor based on configured range
   float lsb_per_g = 16384.0f; // default for ±2g
   switch (this->accel_scale_) {
-    case MPU9255AccelerometerScales_2g:
+    case MS_ACC_2G:
       lsb_per_g = 16384.0f;
       break;
-    case MPU9255AccelerometerScales_4g:
+    case MS_ACC_4G:
       lsb_per_g = 8192.0f;
       break;
-    case MPU9255AccelerometerScales_8g:
+    case MS_ACC_8G:
       lsb_per_g = 4096.0f;
       break;
-    case MPU9255AccelerometerScales_16g:
+    case MS_ACC_16G:
       lsb_per_g = 2048.0f;
       break;
   }
@@ -437,16 +439,16 @@ bool MPU9255Component::update_gyro_data_() {
   // Select scale factor based on configured range
   float dps_per_digit = 131.0f; // default for ±250dps
   switch (this->gyro_scale_) {
-    case MPU9255GyroscopeScales_250dps:
+    case MS_GYRO_250DPS:
       dps_per_digit = 131.0f;
       break;
-    case MPU9255GyroscopeScales_500dps:
+    case MS_GYRO_500DPS:
       dps_per_digit = 65.5f;
       break;
-    case MPU9255GyroscopeScales_1000dps:
+    case MS_GYRO_1000DPS:
       dps_per_digit = 32.8f;
       break;
-    case MPU9255GyroscopeScales_2000dps:
+    case MS_GYRO_2000DPS:
       dps_per_digit = 16.4f;
       break;
   }
@@ -540,17 +542,17 @@ bool MPU9255Component::update_temperature_data_() {
 }
 
 // Scale conversion functions ////////////////////////////////////////////////
-uint8_t MPU9255Component::convert_accel_scale_to_register_(uint8_t current_state, MPU9255AccelerometerScales scale) {
+uint8_t MPU9255Component::convert_accel_scale_to_register_(uint8_t current_state, MS_ACC scale) {
   const uint8_t accel_masks[] = {0x00, 0x01, 0x02, 0x03}; // << 3 later
   return (current_state & ~(0x03 << 3)) | (accel_masks[scale] << 3);
 }
 
-uint8_t MPU9255Component::convert_gyro_scale_to_register_(uint8_t current_state, MPU9255GyroscopeScales scale) {
+uint8_t MPU9255Component::convert_gyro_scale_to_register_(uint8_t current_state, MS_GYRO scale) {
   const uint8_t gyro_masks[] = {0x00, 0x01, 0x02, 0x03}; // << 3 later
   return (current_state & ~(0x03 << 3)) | (gyro_masks[scale] << 3);
 }
 
-bool MPU9255Component::set_accel_scale_(MPU9255AccelerometerScales scale) {
+bool MPU9255Component::set_accel_scale_(MS_ACC scale) {
   uint8_t current_state;
   if (!read_byte_(I2CSensor_MPU, MPU9255_REGISTER_ACCEL_CONFIG, &current_state)) {
     ESP_LOGE("MPU9255", "Failed to read accelerometer configuration register");
@@ -560,7 +562,7 @@ bool MPU9255Component::set_accel_scale_(MPU9255AccelerometerScales scale) {
   return write_byte_(I2CSensor_MPU, MPU9255_REGISTER_ACCEL_CONFIG, current_state);
 }
 
-bool MPU9255Component::set_gyro_scale_(MPU9255GyroscopeScales scale) {
+bool MPU9255Component::set_gyro_scale_(MS_GYRO scale) {
   uint8_t current_state;
   if (!read_byte_(I2CSensor_MPU, MPU9255_REGISTER_GYRO_CONFIG, &current_state)) {
     ESP_LOGE("MPU9255", "Failed to read gyroscope configuration register");
@@ -570,12 +572,12 @@ bool MPU9255Component::set_gyro_scale_(MPU9255GyroscopeScales scale) {
   return write_byte_(I2CSensor_MPU, MPU9255_REGISTER_GYRO_CONFIG, current_state);
 }
 
-void MPU9255Component::set_accel_bandwidth_(MPU9255AccelerometerBandwidth bandwidth) {
+void MPU9255Component::set_accel_bandwidth_(MB_ACC bandwidth) {
   const uint8_t accel_bandwidth_masks[] = { 0x00,  0x01,  0x02,  0x03,  0x04,  0x05,  0x06,  0x07};
   // Clear lower 4 bits (fchoice_b and DLPF_CFG)
   write_byte_AND_(I2CSensor_MPU, MPU9255_REGISTER_ACCEL_CONFIG_2, ~0x0F);
 
-  if (bandwidth == MPU9255AccelerometerBandwidth_1113Hz) {
+  if (bandwidth == MB_ACC_1KHZ) {
     // Set accel_fchoice_b = 1 (bit 3)
     write_byte_OR_(I2CSensor_MPU, MPU9255_REGISTER_ACCEL_CONFIG_2, (1 << 3));
   } else {
@@ -584,16 +586,16 @@ void MPU9255Component::set_accel_bandwidth_(MPU9255AccelerometerBandwidth bandwi
   }
 }
 
-void MPU9255Component::set_gyro_bandwidth_(MPU9255GyroscopeBandwidth bandwidth) {
+void MPU9255Component::set_gyro_bandwidth_(MB_GYRO bandwidth) {
   const uint8_t gyro_bandwidth_masks[] = { 0x00,  0x01,  0x02,  0x03,  0x04,  0x05,  0x06,  0x07};
   // Clear lower 3 bits (DLPF_CFG)
   write_byte_AND_(I2CSensor_MPU, MPU9255_REGISTER_GYRO_CONFIG, ~0x03);
 
-  if (bandwidth == MPU9255GyroscopeBandwidth_8800Hz) {
+  if (bandwidth == MB_GYRO_8KHZ) {
     // Fchoice_b = 01 → bit 0 = 1
     write_byte_OR_(I2CSensor_MPU, MPU9255_REGISTER_GYRO_CONFIG, (1 << 0));
   }
-  else if (bandwidth == MPU9255GyroscopeBandwidth_3600Hz) {
+  else if (bandwidth == MB_GYRO_3KHZ) {
     // Fchoice_b = 10 → bit 1 = 1
     write_byte_OR_(I2CSensor_MPU, MPU9255_REGISTER_GYRO_CONFIG, (1 << 1));
   }
