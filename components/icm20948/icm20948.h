@@ -7,10 +7,15 @@
 #include "esphome/components/i2c/i2c.h"
 #include "esphome/core/automation.h"
 
-#define ICM_20948_USE_DMP
+#include "ICM_20948_TYPES.h"
+#include "ICM_20948_DMP.h"
+#include "ICM_20948_REGISTERS.h"
+#include "ICM_20948_ENUMERATIONS.h"
+#include "AK09916_ENUMERATIONS.h"
+#include "AK09916_REGISTERS.h"
 
-#include "SparkFun_ICM-20948_ArduinoLibrary/src/util/ICM_20948_C.h"
-#include "SparkFun_ICM-20948_ArduinoLibrary/src/util/AK09916_REGISTERS.h"
+#include <vector>
+#include <string>
 
 namespace esphome {
 namespace icm20948 {
@@ -61,103 +66,108 @@ class ICM20948Component : public Component, public i2c::I2CDevice {
 
   void set_calibrate_next_boot(bool enabled);
 
-  static ICM_20948_Status_e write_i2c(uint8_t reg, uint8_t *data, uint32_t len, void *user);
-  static ICM_20948_Status_e read_i2c(uint8_t reg, uint8_t *buff, uint32_t len, void *user);
-
 private:
   //Gyro Bias
-  ICM_20948_Status_e setBiasGyroX(int32_t newValue);
-  ICM_20948_Status_e setBiasGyroY(int32_t newValue);
-  ICM_20948_Status_e setBiasGyroZ(int32_t newValue);
-  ICM_20948_Status_e getBiasGyroX(int32_t* bias);
-  ICM_20948_Status_e getBiasGyroY(int32_t* bias);
-  ICM_20948_Status_e getBiasGyroZ(int32_t* bias);
+  ICM_20948_Status_e setBiasGyroX_(int32_t newValue);
+  ICM_20948_Status_e setBiasGyroY_(int32_t newValue);
+  ICM_20948_Status_e setBiasGyroZ_(int32_t newValue);
+  ICM_20948_Status_e getBiasGyroX_(int32_t* bias);
+  ICM_20948_Status_e getBiasGyroY_(int32_t* bias);
+  ICM_20948_Status_e getBiasGyroZ_(int32_t* bias);
   //Accel Bias
-  ICM_20948_Status_e setBiasAccelX(int32_t newValue);
-  ICM_20948_Status_e setBiasAccelY(int32_t newValue);
-  ICM_20948_Status_e setBiasAccelZ(int32_t newValue);
-  ICM_20948_Status_e getBiasAccelX(int32_t* bias);
-  ICM_20948_Status_e getBiasAccelY(int32_t* bias);
-  ICM_20948_Status_e getBiasAccelZ(int32_t* bias);
+  ICM_20948_Status_e setBiasAccelX_(int32_t newValue);
+  ICM_20948_Status_e setBiasAccelY_(int32_t newValue);
+  ICM_20948_Status_e setBiasAccelZ_(int32_t newValue);
+  ICM_20948_Status_e getBiasAccelX_(int32_t* bias);
+  ICM_20948_Status_e getBiasAccelY_(int32_t* bias);
+  ICM_20948_Status_e getBiasAccelZ_(int32_t* bias);
   //CPass Bias
-  ICM_20948_Status_e setBiasCPassX(int32_t newValue);
-  ICM_20948_Status_e setBiasCPassY(int32_t newValue);
-  ICM_20948_Status_e setBiasCPassZ(int32_t newValue);
-  ICM_20948_Status_e getBiasCPassX(int32_t* bias);
-  ICM_20948_Status_e getBiasCPassY(int32_t* bias);
-  ICM_20948_Status_e getBiasCPassZ(int32_t* bias);
+  ICM_20948_Status_e setBiasCPassX_(int32_t newValue);
+  ICM_20948_Status_e setBiasCPassY_(int32_t newValue);
+  ICM_20948_Status_e setBiasCPassZ_(int32_t newValue);
+  ICM_20948_Status_e getBiasCPassX_(int32_t* bias);
+  ICM_20948_Status_e getBiasCPassY_(int32_t* bias);
+  ICM_20948_Status_e getBiasCPassZ_(int32_t* bias);
 
   std::string statusToString_(ICM_20948_Status_e stat);
 
-  // Device Level
-  ICM_20948_Status_e setBank(uint8_t bank);                                // Sets the bank
-  ICM_20948_Status_e swReset(void);                                        // Performs a SW reset
-  ICM_20948_Status_e sleep(bool on = false);                               // Set sleep mode for the chip
-  ICM_20948_Status_e lowPower(bool on = true);                             // Set low power mode for the chip
-  ICM_20948_Status_e setClockSource(ICM_20948_PWR_MGMT_1_CLKSEL_e source); // Choose clock source
-  ICM_20948_Status_e checkID(void);                                        // Return 'ICM_20948_Stat_Ok' if whoami matches ICM_20948_WHOAMI
+  // Device Lev
+  ICM_20948_Status_e setBank_(uint8_t bank);                                // Sets the bank
+  ICM_20948_Status_e swReset_(void);                                        // Performs a SW reset
+  ICM_20948_Status_e sleep_(bool on = false);                               // Set sleep mode for the chip
+  ICM_20948_Status_e lowPower_(bool on = true);                             // Set low power mode for the chip
+  ICM_20948_Status_e setClockSource_(ICM_20948_PWR_MGMT_1_CLKSEL_e source); // Choose clock source
+  ICM_20948_Status_e getWhoAmI_(uint8_t *whoami);
+  ICM_20948_Status_e checkID_(void);                                        // Return 'ICM_20948_Stat_Ok' if whoami matches ICM_20948_WHOAMI
 
   // Internal Sensor Options
-  ICM_20948_Status_e setSampleMode(uint8_t sensor_id_bm, uint8_t lp_config_cycle_mode); // Use to set accel, gyro, and I2C master into cycled or continuous modes
-  ICM_20948_Status_e setFullScale(uint8_t sensor_id_bm, ICM_20948_fss_t fss);
-  ICM_20948_Status_e setDLPFcfg(uint8_t sensor_id_bm, ICM_20948_dlpcfg_t cfg);
-  ICM_20948_Status_e enableDLPF(uint8_t sensor_id_bm, bool enable);
-  ICM_20948_Status_e setSampleRate(uint8_t sensor_id_bm, ICM_20948_smplrt_t smplrt);
+  ICM_20948_Status_e setSampleMode_(ICM_20948_InternalSensorID_bm sensors, ICM_20948_LP_CONFIG_CYCLE_e mode);
+  ICM_20948_Status_e setFullScale_(ICM_20948_InternalSensorID_bm sensors, ICM_20948_fss_t fss);
+  ICM_20948_Status_e setDLPFcfg_(ICM_20948_InternalSensorID_bm sensors, ICM_20948_dlpcfg_t cfg);
+  ICM_20948_Status_e enableDLPF_(ICM_20948_InternalSensorID_bm sensors, bool enable);
+  ICM_20948_Status_e setSampleRate_(ICM_20948_InternalSensorID_bm sensors, ICM_20948_smplrt_t smplrt);
 
-  ICM_20948_Status_e intEnableDMP(bool enable);
-  ICM_20948_Status_e intEnableRawDataReady(bool enable);
-  ICM_20948_Status_e intEnableOverflowFIFO(uint8_t bm_enable);
+  ICM_20948_Status_e intEnableDMP_(bool enable);
+  ICM_20948_Status_e intEnableRawDataReady_(bool enable);
+  ICM_20948_Status_e intEnableOverflowFIFO_(uint8_t bm_enable);
 
   // Interface Options
-  ICM_20948_Status_e i2cMasterPassthrough(bool passthrough = true);
-  ICM_20948_Status_e i2cMasterEnable(bool enable = true);
-  ICM_20948_Status_e i2cMasterReset();
+  ICM_20948_Status_e i2cMasterPassthrough_(bool passthrough = true);
+  ICM_20948_Status_e i2cMasterEnable_(bool enable = true);
+  ICM_20948_Status_e i2cMasterReset_();
 
   //Used for configuring peripherals 0-3
-  ICM_20948_Status_e i2cControllerConfigurePeripheral(uint8_t peripheral, uint8_t addr, uint8_t reg, uint8_t len, bool Rw = true, bool enable = true, bool data_only = false, bool grp = false, bool swap = false, uint8_t dataOut = 0);
-  ICM_20948_Status_e i2cControllerPeriph4Transaction(uint8_t addr, uint8_t reg, uint8_t *data, uint8_t len, bool Rw, bool send_reg_addr = true);
+  ICM_20948_Status_e i2cControllerConfigurePeripheral_(uint8_t peripheral, uint8_t addr, uint8_t reg, uint8_t len, bool Rw = true, bool enable = true, bool data_only = false, bool grp = false, bool swap = false, uint8_t dataOut = 0);
+  ICM_20948_Status_e i2cControllerPeriph4Transaction_(uint8_t addr, uint8_t reg, uint8_t *data, uint8_t len, bool Rw, bool send_reg_addr = true);
 
   //Used for configuring the Magnetometer
-  ICM_20948_Status_e i2cMasterSingleW(uint8_t addr, uint8_t reg, uint8_t data);
-  uint8_t i2cMasterSingleR(uint8_t addr, uint8_t reg);
+  ICM_20948_Status_e i2cMasterSingleW_(uint8_t addr, uint8_t reg, uint8_t data);
+  uint8_t i2cMasterSingleR_(uint8_t addr, uint8_t reg);
 
   // Default Setup
-  ICM_20948_Status_e startupDefault(bool minimal = false); // If minimal is true, several startup steps are skipped. If ICM_20948_USE_DMP is defined, .begin will call startupDefault with minimal set to true.
-
-  // direct read/write
-  ICM_20948_Status_e read(uint8_t reg, uint8_t *pdata, uint32_t len);
-  ICM_20948_Status_e write(uint8_t reg, uint8_t *pdata, uint32_t len);
+  ICM_20948_Status_e startupDefault_(bool minimal = false); // If minimal is true, several startup steps are skipped. If ICM_20948_USE_DMP is defined, .begin will call startupDefault with minimal set to true.
 
   //Mag specific
-  ICM_20948_Status_e startupMagnetometer(bool minimal = false); // If minimal is true, several startup steps are skipped. The mag then needs to be set up manually for the DMP.
-  ICM_20948_Status_e magWhoIAm(void);
-  uint8_t readMag(AK09916_Reg_Addr_e reg);
-  ICM_20948_Status_e writeMag(AK09916_Reg_Addr_e reg, uint8_t *pdata);
-  ICM_20948_Status_e resetMag();
+  ICM_20948_Status_e startupMagnetometer_(bool minimal = false); // If minimal is true, several startup steps are skipped. The mag then needs to be set up manually for the DMP.
+  ICM_20948_Status_e magWhoIAm_(void);
+  uint8_t readMag_(AK09916_Reg_Addr_e reg);
+  ICM_20948_Status_e writeMag_(AK09916_Reg_Addr_e reg, uint8_t *pdata);
+  ICM_20948_Status_e resetMag_();
 
   //FIFO
-  ICM_20948_Status_e enableFIFO(bool enable = true);
-  ICM_20948_Status_e resetFIFO(void);
-  ICM_20948_Status_e setFIFOmode(bool snapshot = false); // Default to Stream (non-Snapshot) mode
-  ICM_20948_Status_e getFIFOcount(uint16_t *count);
-  ICM_20948_Status_e readFIFO(uint8_t *data, uint8_t len = 1);
+  ICM_20948_Status_e enableFIFO_(bool enable = true);
+  ICM_20948_Status_e resetFIFO_(void);
+  ICM_20948_Status_e setFIFOmode_(bool snapshot = false); // Default to Stream (non-Snapshot) mode
+  ICM_20948_Status_e getFIFOcount_(uint16_t *count);
+  ICM_20948_Status_e readFIFO_(uint8_t *data, uint8_t len = 1);
 
-  ICM_20948_Status_e enableDMP(bool enable = true);
-  ICM_20948_Status_e resetDMP(void);
-  ICM_20948_Status_e loadDMPFirmware(void);
-  ICM_20948_Status_e setDMPstartAddress(unsigned short address = DMP_START_ADDRESS);
-  ICM_20948_Status_e enableDMPSensor(enum inv_icm20948_sensor sensor, bool enable = true);
-  ICM_20948_Status_e enableDMPSensorInt(enum inv_icm20948_sensor sensor, bool enable = true);
-  ICM_20948_Status_e writeDMPmems(unsigned short reg, unsigned int length, const unsigned char *data);
-  ICM_20948_Status_e readDMPmems(unsigned short reg, unsigned int length, unsigned char *data);
-  ICM_20948_Status_e setDMPODRrate(enum DMP_ODR_Registers odr_reg, int interval);
-  ICM_20948_Status_e readDMPdataFromFIFO(icm_20948_DMP_data_t *data);
-  ICM_20948_Status_e setGyroSF(unsigned char div, int gyro_level);
-  ICM_20948_Status_e initializeDMP(void);
+  ICM_20948_Status_e enableDMP_(bool enable = true);
+  ICM_20948_Status_e resetDMP_(void);
+  ICM_20948_Status_e loadDMPFirmware_(void);
+  ICM_20948_Status_e setDMPstartAddress_(unsigned short address = DMP_START_ADDRESS);
+  ICM_20948_Status_e enableDMPSensor_(inv_icm20948_sensor sensor, bool state = true);
+  ICM_20948_Status_e enableDMPSensorInt_(inv_icm20948_sensor sensor, bool state = true);
+  ICM_20948_Status_e writeDMPmems_(unsigned short reg, unsigned int length, const unsigned char *data);
+  ICM_20948_Status_e readDMPmems_(unsigned short reg, unsigned int length, unsigned char *data);
+  ICM_20948_Status_e setDMPODRrate_(DMP_ODR_Registers odr_reg, int interval);
+  ICM_20948_Status_e readDMPdataFromFIFO_(icm_20948_DMP_data_t *data);
+  ICM_20948_Status_e setGyroSF_(unsigned char div, int gyro_level);
+  ICM_20948_Status_e initializeDMP_(void);
 
   void updateBiasStoreSum_(biasStore *store);
   bool isBiasStoreValid_(biasStore *store);
   void printBiases_(biasStore *store);
+
+  ICM_20948_Status_e write_i2c(uint8_t reg, uint8_t *data, uint32_t len);
+  ICM_20948_Status_e read_i2c(uint8_t reg, uint8_t *buff, uint32_t len);
+
+  ICM_20948_Status_e inv_icm20948_read_mems_(unsigned short reg, unsigned int length, unsigned char *data);
+  ICM_20948_Status_e inv_icm20948_write_mems_(unsigned short reg, unsigned int length, const unsigned char *data);
+
+  ICM_20948_Status_e intEnable_(ICM_20948_INT_enable_t *write, ICM_20948_INT_enable_t *read);
+
+  uint8_t sensor_type_2_android_sensor(inv_icm20948_sensor sensor);
+  inv_icm20948_sensor inv_icm20948_sensor_android_2_sensor_type(int sensor);
 
   ESPPreferenceObject bias_store_pref_;
   biasStore bias_store_;
@@ -182,6 +192,9 @@ private:
 
   ICM_20948_Device_t device_;
   ICM_20948_Status_e status_;
+
+  bool initialized_{false};
+  std::vector<std::string> steps_;
 };
 
 template<typename... Ts> class SetCalibrateNextBootAction : public Action<Ts...> {
@@ -190,7 +203,7 @@ public:
 
   TEMPLATABLE_VALUE(bool, calibrate_next_boot);
 
-  void play(TS... x) override {
+  void play(Ts... x) override {
     auto enabled = this->calibrate_next_boot_.value(x...);
     this->parent->set_calibrate_next_boot(enabled);
   }

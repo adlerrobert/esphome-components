@@ -42,7 +42,7 @@ CONF_YAW = "yaw"
 icm20948_ns = cg.esphome_ns.namespace("icm20948")
 
 icm20948Component = icm20948_ns.class_(
-    "icm20948Component", cg.Component, i2c.I2CDevice
+    "ICM20948Component", cg.Component, i2c.I2CDevice
 )
 
 SetCalibrateNextBootAction = icm20948_ns.class_(
@@ -164,5 +164,3 @@ async def to_code(config):
         if key in config:
             sens = await sensor.new_sensor(config[key])
             cg.add(getattr(var, f"set_{d}_sensor")(sens))
-
-    cg.add_library("sparkfun/SparkFun_ICM-20948_ArduinoLibrary", "1.3.2")
